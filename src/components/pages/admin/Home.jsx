@@ -1,271 +1,70 @@
 /* eslint-disable no-unused-vars */
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from "react";
+import {
+  UserGroupIcon,
+  ChartBarIcon,
+  ShieldExclamationIcon,
+} from "@heroicons/react/24/outline";
+import { Bar, Doughnut, Line } from "react-chartjs-2";
 import {
   Chart as ChartJS,
-  ArcElement,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
   Title,
   Tooltip,
   Legend,
-  Filler,
+  ArcElement,
+  LineElement,
+  PointElement,
 } from "chart.js";
-import { Line, Pie, Bar } from "react-chartjs-2";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
 // Register ChartJS components
 ChartJS.register(
-  ArcElement,
   CategoryScale,
   LinearScale,
-  PointElement,
-  LineElement,
   BarElement,
+  LineElement,
+  PointElement,
   Title,
   Tooltip,
   Legend,
-  Filler
+  ArcElement
 );
+import DynamicTrendChart from "./DynamicTrendChart.jsx";
 
 function AdminHome() {
+  const [usersData, setUsersData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [predictions, setPredictions] = useState([]);
+  const [preventions, setPreventions] = useState([]);
+  const [filteredPreventions, setFilteredPreventions] = useState([]);
   const navigate = useNavigate();
-  const [userData, setUserData] = useState([]);
-  const [areaChartData, setAreaChartData] = useState({
-    labels: [],
-    datasets: [],
-  });
-  const [pieChartData, setPieChartData] = useState({
-    labels: [],
-    datasets: [],
-  });
-  const [expenseChartData, setExpenseChartData] = useState({
-    labels: [],
-    datasets: [],
-  });
-  const [reimbursementChartData, setReimbursementChartData] = useState({
-    labels: [],
-    datasets: [],
-  });
-  const [recentExpenses, setRecentExpenses] = useState([]);
-  const [recentReimbursements, setRecentReimbursements] = useState([]);
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    console.log("Retrieved Token:", token);
-
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get("http://127.0.0.1:8000/users/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.data && res.data.users) {
-          setUserData(res.data.users);
-          console.log("Fetched Users Data:", res.data.users);
-          processUserChartData(res.data.users);
-        }
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        handleAuthError(error);
-      }
-    };
-
-    const fetchExpenses = async () => {
-      try {
-        const res = await axios.get("http://127.0.0.1:8000/expense/expenses/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.data && res.data.expenses) {
-          console.log("Fetched Expenses Data:", res.data.expenses);
-          processExpenseChartData(res.data.expenses);
-          setRecentExpenses(res.data.expenses.slice(0, 5)); // Fetch 5 recent expenses
-        }
-      } catch (error) {
-        console.error("Error fetching Expenses:", error);
-        handleAuthError(error);
-      }
-    };
-
-    const fetchReimbursements = async () => {
-      try {
-        const res = await axios.get(
-          "http://127.0.0.1:8000/reimbursement/reimbursements/",
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-        if (res.data && res.data) {
-          console.log("Fetched Reimbursements Data:", res.data);
-          processReimbursementChartData(res.data);
-          setRecentReimbursements(res.data.slice(0, 5)); // Fetch 5 recent reimbursements
-        }
-      } catch (error) {
-        console.error("Error fetching Reimbursements:", error);
-        handleAuthError(error);
-      }
-    };
-
-    fetchUsers();
-    fetchExpenses();
-    fetchReimbursements();
-  }, []);
-
-  const handleAuthError = (err) => {
-    if (err.response && err.response.status === 401) {
-      alert("Session expired. Please log in again.");
-      navigate("/login");
-    }
-  };
-
-  const processUserChartData = (data) => {
-    const roles = ["admin", "manager", "driver"];
-    const colors = {
-      admin: "rgba(75,192,192,0.2)",
-      manager: "rgba(255,99,132,0.2)",
-      driver: "rgba(54,162,235,0.2)",
-    };
-    const borderColors = {
-      admin: "rgba(75,192,192,1)",
-      manager: "rgba(255,99,132,1)",
-      driver: "rgba(54,162,235,1)",
-    };
-
-    const usersByRoleAndDate = data.reduce((acc, user) => {
-      const role = user.role;
-      const date = new Date(user.created_at).toLocaleDateString();
-      if (!acc[role]) acc[role] = {};
-      acc[role][date] = acc[role][date] ? acc[role][date] + 1 : 1;
-      return acc;
-    }, {});
-
-    const labels = [
-      ...new Set(
-        data.map((user) => new Date(user.created_at).toLocaleDateString())
-      ),
-    ].sort();
-
-    const areaChartDatasets = roles.map((role) => ({
-      label: role.charAt(0).toUpperCase() + role.slice(1),
-      data: labels.map((date) => usersByRoleAndDate[role]?.[date] || 0),
-      fill: true,
-      backgroundColor: colors[role],
-      borderColor: borderColors[role],
-      tension: 0.4,
-    }));
-
-    const roleCounts = roles.reduce((acc, role) => {
-      acc[role] = data.filter((user) => user.role === role).length;
-      return acc;
-    }, {});
-
-    const pieChartDataset = {
-      labels: roles.map((role) => role.charAt(0).toUpperCase() + role.slice(1)),
-      datasets: [
-        {
-          data: roles.map((role) => roleCounts[role]),
-          backgroundColor: roles.map((role) => colors[role]),
-          borderColor: roles.map((role) => borderColors[role]),
-          borderWidth: 1,
-        },
-      ],
-    };
-
-    setAreaChartData({ labels, datasets: areaChartDatasets });
-    setPieChartData(pieChartDataset);
-  };
-
-  const processExpenseChartData = (data) => {
-    const statuses = ["pending", "approved", "rejected"];
-    const colors = {
-      pending: "rgba(255,165,0,0.2)",
-      approved: "rgba(75,192,192,0.2)",
-      rejected: "rgba(255,99,132,0.2)",
-    };
-    const borderColors = {
-      pending: "rgba(255,165,0,1)",
-      approved: "rgba(75,192,192,1)",
-      rejected: "rgba(255,99,132,1)",
-    };
-
-    const expensesByStatusAndDate = data.reduce((acc, expense) => {
-      const status = expense.status;
-      const date = new Date(expense.created_at).toLocaleDateString();
-      if (!acc[status]) acc[status] = {};
-      acc[status][date] = acc[status][date] ? acc[status][date] + 1 : 1;
-      return acc;
-    }, {});
-
-    const labels = [
-      ...new Set(
-        data.map((expense) => new Date(expense.created_at).toLocaleDateString())
-      ),
-    ].sort();
-
-    const datasets = statuses.map((status) => ({
-      label: status.charAt(0).toUpperCase() + status.slice(1),
-      data: labels.map((date) => expensesByStatusAndDate[status]?.[date] || 0),
-      fill: false,
-      backgroundColor: colors[status],
-      borderColor: borderColors[status],
-      tension: 0.4,
-    }));
-
-    setExpenseChartData({ labels, datasets });
-  };
-
-  const processReimbursementChartData = (data) => {
-    const statuses = ["Paid", "Unpaid"];
-    const colors = {
-      Paid: "rgba(54,162,235,0.2)",
-      Unpaid: "rgba(255,99,132,0.2)",
-    };
-    const borderColors = {
-      Paid: "rgba(54,162,235,1)",
-      Unpaid: "rgba(255,99,132,1)",
-    };
-
-    const reimbursementsByStatusAndDate = data.reduce((acc, reimbursement) => {
-      const status = reimbursement.is_paid ? "Paid" : "Unpaid";
-      const date = new Date(reimbursement.created_at).toLocaleDateString();
-      if (!acc[status]) acc[status] = {};
-      acc[status][date] = acc[status][date] ? acc[status][date] + 1 : 1;
-      return acc;
-    }, {});
-
-    const labels = [
-      ...new Set(
-        data.map((reimbursement) =>
-          new Date(reimbursement.created_at).toLocaleDateString()
-        )
-      ),
-    ].sort();
-
-    const datasets = statuses.map((status) => ({
-      label: status,
-      data: labels.map(
-        (date) => reimbursementsByStatusAndDate[status]?.[date] || 0
-      ),
-      fill: false,
-      backgroundColor: colors[status],
-      borderColor: borderColors[status],
-      tension: 0.4,
-    }));
-
-    setReimbursementChartData({
-      labels: labels.map(String),
-      datasets: datasets.map((dataset) => ({
-        ...dataset,
-        data: dataset.data.map(Number),
-      })),
-    });
-  };
-
+  // Define base chart options
   const chartOptions = {
     responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: "bottom",
+      },
+    },
+  };
+
+  // Define line chart specific options
+  const lineChartOptions = {
+    ...chartOptions,
     scales: {
+      x: {
+        ticks: {
+          maxRotation: 45,
+          minRotation: 45,
+        },
+      },
       y: {
         beginAtZero: true,
         ticks: {
@@ -273,193 +72,356 @@ function AdminHome() {
         },
       },
     },
-    plugins: {
-      title: {
-        display: true,
-      },
-    },
   };
 
-  // Add new state for map center
-  const [center, setCenter] = useState({
-    lat: 1.3521,  // Default to Singapore coordinates
-    lng: 103.8198
+  useEffect(() => {
+    const fetchAllData = async () => {
+      try {
+        await Promise.all([
+          fetchUserData(),
+          fetchPredictions(),
+          fetchPreventions(),
+        ]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setError(error.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAllData();
+  }, []); // Empty dependency array since we only want to fetch once on mount
+
+  const fetchUserData = async () => {
+    const storedUserData = localStorage.getItem("userData");
+    const token = localStorage.getItem("token");
+    const accessToken = storedUserData
+      ? JSON.parse(storedUserData).access_token
+      : null;
+
+    if (!accessToken) {
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await axios.get("http://127.0.0.1:8000/users/", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (response.data && response.data.users) {
+        setUsersData(response.data.users);
+      } else {
+        throw new Error("Invalid data format received");
+      }
+    } catch (err) {
+      throw new Error(err.message || "Failed to load user data");
+    }
+  };
+
+  const fetchPredictions = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:8000/prediction/predictions/",
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        setPredictions(data || []);
+      } else {
+        throw new Error("Failed to fetch predictions");
+      }
+    } catch (err) {
+      throw new Error("Error fetching predictions");
+    }
+  };
+
+  const fetchPreventions = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:8000/prevention/preventions/"
+      );
+      if (
+        response.data &&
+        (Array.isArray(response.data) || Array.isArray(response.data.data))
+      ) {
+        const data = Array.isArray(response.data)
+          ? response.data
+          : response.data.data;
+        setPreventions(data);
+        setFilteredPreventions(data);
+      } else {
+        throw new Error("Unexpected response format. Expected an array.");
+      }
+    } catch (err) {
+      throw new Error(
+        err.response?.data?.Error ||
+          err.message ||
+          "Failed to fetch prevention strategies"
+      );
+    }
+  };
+
+  const processChartData = () => {
+    const adminCount = usersData.filter((user) => user.role === "admin").length;
+    const regularUserCount = usersData.filter(
+      (user) => user.role === "user"
+    ).length;
+
+    // Process individual user registration dates
+  const userRegistrationDates = usersData.map((user) => {
+    const date = new Date(user.created_at); // Parse date
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }); // Format the date
   });
 
-  const mapContainerStyle = {
-    width: "100%",
-    height: "400px",
-    marginTop: "2rem",
+  // Count registrations per specific date
+  const registrationsByDate = userRegistrationDates.reduce((acc, date) => {
+    acc[date] = (acc[date] || 0) + 1; // Increment the count for this date
+    return acc;
+  }, {});
+
+  // Sort dates chronologically
+  const sortedDates = Object.keys(registrationsByDate).sort(
+    (a, b) => new Date(a) - new Date(b)
+  );
+
+
+
+    // Process registration data by month
+  const registrationsByMonth = usersData.reduce((acc, user) => {
+    const date = new Date(user.created_at); // Ensure the date is parsed correctly
+    const monthYear = date.toLocaleDateString("en-US", {
+      month: "short",
+      year: "numeric",
+    });
+    acc[monthYear] = (acc[monthYear] || 0) + 1; // Increment registration count for the month
+    return acc;
+  }, {});
+
+  // Sort the months chronologically
+  const sortedMonths = Object.keys(registrationsByMonth).sort((a, b) => {
+    const [monthA, yearA] = a.split(" ");
+    const [monthB, yearB] = b.split(" ");
+    return (
+      new Date(`${yearA}-${monthA}-01`).getTime() -
+      new Date(`${yearB}-${monthB}-01`).getTime()
+    );
+  });
+
+    // Process predictions and preventions by date
+    const predictionsByDate = predictions.reduce((acc, pred) => {
+      const date = new Date(pred.created_at);
+      const formattedDate = date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      acc[formattedDate] = (acc[formattedDate] || 0) + 1;
+      return acc;
+    }, {});
+
+    const preventionsByDate = preventions.reduce((acc, prev) => {
+      const date = new Date(prev.created_at);
+      const formattedDate = date.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      acc[formattedDate] = (acc[formattedDate] || 0) + 1;
+      return acc;
+    }, {});
+
+    // Get all unique dates and sort them chronologically
+    const allDates = [
+      ...new Set([
+        ...Object.keys(predictionsByDate),
+        ...Object.keys(preventionsByDate),
+      ]),
+    ].sort((a, b) => new Date(a) - new Date(b));
+
+    return {
+      roles: {
+      labels: ["Administrators", "Regular Users"],
+      datasets: [
+        {
+          data: [adminCount, regularUserCount],
+          backgroundColor: ["#2F4F4F", "#00FFFF"],
+          borderWidth: 1,
+        },
+      ],
+    },
+    registrations: {
+      labels: sortedDates, // Use sorted individual dates
+      datasets: [
+        {
+          label: "User Registrations",
+          data: sortedDates.map((date) => registrationsByDate[date]),
+          backgroundColor: "#4CAF50",
+          borderColor: "#4CAF50",
+          borderWidth: 1,
+        },
+      ],
+    },
+      trendsOverTime: {
+        labels: allDates,
+        datasets: [
+          {
+            label: "Predictions",
+            data: allDates.map((date) => predictionsByDate[date] || 0),
+            borderColor: "#483D8B",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            tension: 0.4,
+          },
+          {
+            label: "Preventions",
+            data: allDates.map((date) => preventionsByDate[date] || 0),
+            borderColor: "#36A2EB",
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+            tension: 0.4,
+          },
+        ],
+      },
+    };
   };
 
-  const MapComponent = () => {
-    return (
-      <div className="w-full p-4 bg-white rounded shadow-md mt-8">
-        <h2 className="text-lg font-semibold mb-4 text-center text-black">
-          Location Overview
-        </h2>
-        <div style={mapContainerStyle}>
-          <iframe
-            title="Default Map"
-            width="100%"
-            height="100%"
-            frameBorder="0"
-            src={`https://www.openstreetmap.org/export/embed.html?bbox=${
-              center.lng - 0.1
-            }%2C${center.lat - 0.1}%2C${center.lng + 0.1}%2C${
-              center.lat + 0.1
-            }&amp;layer=mapnik`}
-          ></iframe>
-        </div>
-      </div>
-    );
+  const getTodayPredictions = () => {
+    const today = new Date().toISOString().split("T")[0];
+    return predictions.filter((pred) => pred.created_at.startsWith(today))
+      .length;
   };
+
+  if (loading) return <div className="p-6">Loading...</div>;
+  if (error) return <div className="p-6 text-red-500">{error}</div>;
+
+  const chartData = processChartData();
+  const totalUsers = usersData.length;
+  const activeUsers = usersData.filter((user) => user.role === "user").length;
+  const adminUsers = usersData.filter((user) => user.role === "admin").length;
 
   return (
-    <div className="mt-20 flex flex-col items-center">
-      <div className="w-full flex flex-wrap justify-start gap-8">
-        <div className="flex-1 min-w-[300px] md:max-w-[48%] p-4 bg-white rounded shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-center text-black">
-            Users Over Time
-          </h2>
-          <Line
-            data={areaChartData}
-            options={{
-              ...chartOptions,
-              plugins: {
-                ...chartOptions.plugins,
-                title: { text: "Users Over Time" },
-              },
-            }}
-          />
+    <div className="p-6">
+      {/* User Statistics Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white text-sm">Total Users</p>
+              <h3 className="text-white text-2xl font-bold">{totalUsers}</h3>
+              <p className="text-blue-100 text-xs mt-2">
+                Active Users: {activeUsers}
+              </p>
+            </div>
+            <UserGroupIcon className="h-12 w-12 text-white opacity-75" />
+          </div>
         </div>
 
-        <div className="flex-1 min-w-[200px] md:max-w-[30%] p-4 bg-white rounded shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-center text-black">
-            User Distribution by Role
-          </h2>
-          <Pie data={pieChartData} options={chartOptions} />
+        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white text-sm">Regular Users</p>
+              <h3 className="text-white text-2xl font-bold">{activeUsers}</h3>
+              <p className="text-green-100 text-xs mt-2">User Accounts</p>
+            </div>
+            <UserGroupIcon className="h-12 w-12 text-white opacity-75" />
+          </div>
         </div>
 
-        <div className="flex-1 min-w-[300px] md:max-w-[48%] p-4 bg-white rounded shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-center text-black">
-            Expenses Over Time by Status
-          </h2>
-          <Line
-            data={expenseChartData}
-            options={{
-              ...chartOptions,
-              plugins: {
-                ...chartOptions.plugins,
-                title: { text: "Expenses Over Time by Status" },
-              },
-            }}
-          />
-        </div>
-
-        <div className="flex-1 min-w-[300px] md:max-w-[48%] p-4 bg-white rounded shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-center text-black">
-            Reimbursements Over Time by Payment Status
-          </h2>
-          <Bar
-            data={reimbursementChartData}
-            options={{
-              ...chartOptions,
-              plugins: {
-                ...chartOptions.plugins,
-                title: { text: "Reimbursements Over Time by Payment Status" },
-              },
-            }}
-          />
+        <div className="bg-gradient-to-r from-sky-800 to-sky-900 rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white text-sm">Administrators</p>
+              <h3 className="text-white text-2xl font-bold">{adminUsers}</h3>
+              <p className="text-purple-100 text-xs mt-2">Admin Accounts</p>
+            </div>
+            <UserGroupIcon className="h-12 w-12 text-white opacity-75" />
+          </div>
         </div>
       </div>
 
-      <div className="w-full flex flex-wrap justify-start gap-8 mt-8">
-        {/* Recent Expenses and Reimbursements */}
-        <div className="flex-1 min-w-[300px] md:max-w-[48%] p-4 bg-white rounded shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-center text-black">
-            Recent Expenses
-          </h2>
-          <ul className="list-none">
-            {recentExpenses.map((expense, index) => (
-              <li key={index} className="mb-4 p-4 border-b border-gray-200">
-                <div className="flex justify-between items-center">
-                  <div className="font-semibold text-gray-700">
-                    <span className="text-black">
-                      {expense.user.phone_number}
-                    </span>
-                  </div>
-                  <div className="font-semibold text-gray-700">
-                    {/* <span>Amount: </span> */}
-                    <span className="text-black">{expense.amount}</span>
-                  </div>
-                  <div
-                    className={`font-semibold ${
-                      expense.status === "pending"
-                        ? "text-orange-600"
-                        : expense.status === "approved"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    {/* <span>Status: </span> */}
-                    <span>{expense.status}</span>
-                  </div>
-                  <div className="text-green-700">
-                    {/* <span>Date: </span> */}
-                    <span>
-                      {new Date(expense.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-gray-800 font-semibold mb-4">
+            User Registrations Over Time
+          </h3>
+          <div className="h-64">
+            <Bar data={chartData.registrations} options={chartOptions} />
+          </div>
         </div>
 
-        <div className="flex-1 min-w-[300px] md:max-w-[48%] p-4 bg-white rounded shadow-md">
-          <h2 className="text-lg font-semibold mb-4 text-center text-black">
-            Recent Reimbursements
-          </h2>
-          <ul>
-            {recentReimbursements.map((reimbursement, index) => (
-              <li
-                key={index}
-                className="mb-4 p-4 border-b border-gray-200 flex justify-between items-center"
-              >
-                <div className="font-semibold text-gray-700">
-                  <span> {reimbursement.expense.user.phone_number}</span>
-                </div>
-                {/* Amount */}
-                <div className="font-semibold text-gray-700">
-                  <span>{reimbursement.expense.amount}</span>
-                </div>
-
-                {/* Status */}
-                <div
-                  className={`font-semibold ${
-                    reimbursement.is_paid ? "text-green-600" : "text-red-600"
-                  }`}
-                >
-                  <span>{reimbursement.is_paid ? "Paid" : "Unpaid"}</span>
-                </div>
-
-                {/* Date */}
-                <div className="text-green-700">
-                  <span>
-                    {new Date(reimbursement.created_at).toLocaleDateString()}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h3 className="text-gray-800 font-semibold mb-4">
+            User Role Distribution
+          </h3>
+          <div className="h-64">
+            <Doughnut data={chartData.roles} options={chartOptions} />
+          </div>
         </div>
       </div>
 
-       {/* Add the map component at the bottom */}
-       {/* <div className="w-full">
-        <MapComponent />
-      </div> */}
+      {/* Prediction and Prevention Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+        <div className="bg-gradient-to-r from-sky-800 to-sky-900 rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white text-sm">Total Predictions</p>
+              <h3 className="text-white text-2xl font-bold">
+                {predictions.length}
+              </h3>
+              <p className="text-amber-100 text-xs mt-2">
+                Today Predictions: {getTodayPredictions()}
+              </p>
+            </div>
+            <ChartBarIcon className="h-12 w-12 text-white opacity-75" />
+          </div>
+        </div>
+
+        <div className="bg-gradient-to-r from-teal-500 to-teal-600 rounded-lg shadow-lg p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-white text-sm">Total Preventions</p>
+              <h3 className="text-white text-2xl font-bold">
+                {preventions.length}
+              </h3>
+              <p className="text-teal-100 text-xs mt-2">
+                Active Prevention Strategies
+              </p>
+            </div>
+            <ShieldExclamationIcon className="h-12 w-12 text-white opacity-75" />
+          </div>
+        </div>
+      </div>
+
+      {/* Charts Container */}
+<div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+  {/* Trends Chart */}
+  <div className="bg-white rounded-lg shadow-lg p-6">
+    <h3 className="text-gray-800 font-semibold mb-4">
+      Daily Predictions and Preventions Trends
+    </h3>
+    <div className="h-64">
+      <Line data={chartData.trendsOverTime} options={lineChartOptions} />
+    </div>
+  </div>
+  
+  {/* Dynamic Trend Chart */}
+  <div className="h-full">
+    <DynamicTrendChart
+      predictions={predictions}
+      preventions={preventions}
+      usersData={usersData}
+    />
+  </div>
+</div>
     </div>
   );
 }

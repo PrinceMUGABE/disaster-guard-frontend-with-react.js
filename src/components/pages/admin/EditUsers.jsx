@@ -47,13 +47,13 @@ const EditUser = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     const token = localStorage.getItem("token"); // Retrieve the token from local storage
-
+  
     if (!token) {
       console.error("No token found. User is not authenticated.");
       setErrorMessage("No token found. Please login first.");
       return; // Stop the request if there's no token
     }
-
+  
     setLoading(true); // Start loading when the form is submitted
     setErrorMessage(""); // Clear any previous error message
     axios
@@ -64,18 +64,24 @@ const EditUser = () => {
       })
       .then((res) => {
         if (res.data) {
-          alert("Data updated successfully");
+          // alert("Data updated successfully");
           navigate("/admin/users"); // Navigate back to the users list page
         }
       })
       .catch((err) => {
         console.error("Error updating user:", err); // Log the error
-        setErrorMessage(err.response?.data?.message || "Error updating user.");
+  
+        // Attempt to extract detailed error message from the backend
+        const backendMessage = err.response?.data?.message || err.response?.data?.detail || "Error updating user.";
+  
+        // Set the error message to be displayed
+        setErrorMessage(backendMessage);
       })
       .finally(() => {
         setLoading(false); // Stop loading after the request finishes
       });
   };
+  
 
   return (
     <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8 bg-white">
