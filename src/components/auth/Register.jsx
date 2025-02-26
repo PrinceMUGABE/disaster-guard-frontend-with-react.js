@@ -10,6 +10,8 @@ const Register = () => {
   const navigate = useNavigate();
   const webcamRef = useRef(null);
   const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
     phone: '',
     email: '',
     password: '',
@@ -53,6 +55,8 @@ const Register = () => {
     }
 
     const dataToSubmit = {
+      first_name: formData.first_name,
+      last_name: formData.last_name,
       phone: formData.phone,
       password: formData.password,
       email: formData.email,
@@ -125,6 +129,32 @@ const Register = () => {
         {message && <p className="text-green-500 text-sm">{message}</p>}
 
         <form className="mt-8 space-y-2" onSubmit={handleSubmit}>
+          <div>
+            <label htmlFor="first_name" className="block text-sm font-medium text-gray-700">First Name</label>
+            <input
+              id="first_name"
+              name="first_name"
+              type="text"
+              value={formData.first_name}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
+              required
+            />
+          </div>
+
+          <div>
+            <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">Last Name</label>
+            <input
+              id="last_name"
+              name="last_name"
+              type="text"
+              value={formData.last_name}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
+              required
+            />
+          </div>
+
           <div>
             <label htmlFor="phone" className="block text-sm font-medium text-gray-700">Phone Number</label>
             <input

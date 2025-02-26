@@ -204,6 +204,8 @@ const UserPredictions = () => {
   const handleCreatePrediction = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null); // Clear any previous errors
+
     try {
       const response = await fetch(
         "http://localhost:8000/prediction/predict/",
@@ -216,18 +218,30 @@ const UserPredictions = () => {
           body: JSON.stringify(formData),
         }
       );
-      if (response.ok) {
-        const result = await response.json();
-        console.log("Returned result after predicting: ", result);
-        setPredictionResult(result);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle error response
+        const errorMessage = data.Error || data.error || "Failed to create prediction";
+        console.error("Error creating prediction:", errorMessage);
+
+        // If there's a next_available date in the response
+        if (data.next_available) {
+          const nextDate = new Date(data.next_available);
+          setError(`${errorMessage}. Next available: ${nextDate.toLocaleDateString()} at ${nextDate.toLocaleTimeString()}`);
+        } else {
+          setError(errorMessage);
+        }
+      } else {
+        console.log("Returned result after predicting: ", data);
+        setPredictionResult(data);
         await fetchPredictions();
         // Don't close the modal here
-      } else {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to create prediction");
       }
     } catch (error) {
-      alert(error.message);
+      console.error("Network error:", error);
+      setError(error.message || "Network error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -547,15 +561,14 @@ const UserPredictions = () => {
                           {prediction.most_likely_disaster}
                         </div>
                         <div
-                          className={`text-sm ${
-                            prediction.risk_level === "High"
+                          className={`text-sm ${prediction.risk_level === "High"
                               ? "text-sky-900"
                               : prediction.risk_level === "Medium"
-                              ? "text-yellow-600"
-                              : prediction.risk_level === "Low"
-                              ? "text-amber-400"
-                              : "text-yellow-500"
-                          }`}
+                                ? "text-yellow-600"
+                                : prediction.risk_level === "Low"
+                                  ? "text-amber-400"
+                                  : "text-yellow-500"
+                            }`}
                         >
                           Risk: {prediction.risk_level}
                         </div>
@@ -663,13 +676,12 @@ const UserPredictions = () => {
                     {selectedPrediction.most_likely_disaster} available <span className="text-sky-900"> {selectedPrediction.district} - {selectedPrediction.sector}</span>
                   </p>
                   <p
-                    className={`text-sm mt-1 ${
-                      selectedPrediction.risk_level === "High"
+                    className={`text-sm mt-1 ${selectedPrediction.risk_level === "High"
                         ? "text-sky-900"
                         : selectedPrediction.risk_level === "Medium"
-                        ? "text-yellow-600"
-                        : "text-green-600"
-                    }`}
+                          ? "text-yellow-600"
+                          : "text-green-600"
+                      }`}
                   >
                     Risk Level: {selectedPrediction.risk_level}
                   </p>
@@ -683,12 +695,18 @@ const UserPredictions = () => {
                 </h3>
                 {predictionStrategies[selectedPrediction.id]?.length > 0 ? (
                   <div className="space-y-6">
+                    <p className="text-green-700">
+                      Status: <span>{predictionStrategies[selectedPrediction.id][0]?.status || "Pending"}</span>
+                    </p>
                     <div className="space-y-6"></div>
                     {/* Actions Section */}
                     <div className="bg-white border rounded-lg p-4">
                       <h4 className="text-md font-semibold text-gray-900 mb-3">
                         Action Items
                       </h4>
+
+
+
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {predictionStrategies[selectedPrediction.id].map(
                           (strategy) => (
@@ -696,9 +714,12 @@ const UserPredictions = () => {
                               key={strategy.id}
                               className="p-4 border rounded-lg bg-gray-50 shadow-sm"
                             >
+
                               <p className="font-medium text-gray-900">
                                 {strategy.action}
                               </p>
+
+
                               <p className="text-sm text-gray-600 mt-1">
                                 {strategy.description}
                               </p>
@@ -706,13 +727,12 @@ const UserPredictions = () => {
                                 Timeline: {strategy.timeframe}
                               </p>
                               <span
-                                className={`inline-block mt-2 px-2 py-1 text-xs rounded-full whitespace-nowrap ${
-                                  strategy.priority === "High"
+                                className={`inline-block mt-2 px-2 py-1 text-xs rounded-full whitespace-nowrap ${strategy.priority === "High"
                                     ? "bg-red-100 text-red-800"
                                     : strategy.priority === "Medium"
-                                    ? "bg-yellow-100 text-yellow-800"
-                                    : "bg-green-100 text-green-800"
-                                }`}
+                                      ? "bg-yellow-100 text-yellow-800"
+                                      : "bg-green-100 text-green-800"
+                                  }`}
                               >
                                 {strategy.priority} Priority
                               </span>
@@ -823,6 +843,10 @@ const UserPredictions = () => {
                         )}
                       </div>
                     </div>
+
+
+
+
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500">

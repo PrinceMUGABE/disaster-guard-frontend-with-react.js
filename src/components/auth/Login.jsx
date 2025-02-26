@@ -84,6 +84,8 @@ const Login = () => {
         if (res.data) {
           const user = {
             id: res.data.id,
+            first_name: res.data.first_name,
+            last_name: res.data.last_name,
             role: res.data.role,
             email: res.data.email,
             created_at: res.data.created_at,

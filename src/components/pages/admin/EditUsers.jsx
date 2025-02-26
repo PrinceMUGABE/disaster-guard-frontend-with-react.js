@@ -102,6 +102,47 @@ const EditUser = () => {
 
           <div>
             <label
+              htmlFor="first_name"
+              className="block text-sm font-medium leading-6 text-gray-900"
+            >
+              First Name
+            </label>
+            <div className="mt-2">
+              <input
+                id="first_name"
+                name="first_name"
+                type="text"
+                value={data.first_name || ""}
+                onChange={(e) => setData({ ...data, first_name: e.target.value })}
+                required
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label
+              htmlFor="last_name"
+              className="block text-sm font-medium leading-6 text-gray-900"
+            >
+              Last Name
+            </label>
+            <div className="mt-2">
+              <input
+                id="last_name"
+                name="last_name"
+                type="text"
+                value={data.last_name || ""}
+                onChange={(e) => setData({ ...data, last_name: e.target.value })}
+                required
+                className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+              />
+            </div>
+          </div>
+
+
+          <div>
+            <label
               htmlFor="phone_number"
               className="block text-sm font-medium leading-6 text-gray-900"
             >

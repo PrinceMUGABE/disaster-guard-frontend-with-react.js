@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 /* eslint-disable no-unused-vars */
 import React, { useEffect, useState } from "react";
 import axios from "axios";
@@ -19,6 +20,8 @@ const ManagePreventions = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deletingId, setDeletingId] = useState(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
 
   useEffect(() => {
     const fetchPreventions = async () => {
@@ -43,8 +46,8 @@ const ManagePreventions = () => {
     fetchPreventions();
   }, []);
 
-   // Update the filtering useEffect to handle all search cases
-   useEffect(() => {
+  // Update the filtering useEffect to handle all search cases
+  useEffect(() => {
     const filteredData = preventions.filter((prevention) => {
       const searchLower = searchQuery.toLowerCase().trim();
       
@@ -58,7 +61,8 @@ const ManagePreventions = () => {
         district: prevention.prediction?.district || '',
         sector: prevention.prediction?.sector || '',
         risk_level: prevention.prediction?.risk_level || '',
-        most_likely_disaster: prevention.prediction?.most_likely_disaster || ''
+        most_likely_disaster: prevention.prediction?.most_likely_disaster || '',
+        status: prevention.status || ''
       };
 
       // Check if any of the fields include the search query
@@ -70,7 +74,6 @@ const ManagePreventions = () => {
     setFilteredPreventions(filteredData);
     setCurrentPage(1); // Reset to first page when searching
   }, [searchQuery, preventions]);
-
 
   // Add delete handler
   const handleDelete = async (id) => {
@@ -102,6 +105,42 @@ const ManagePreventions = () => {
     }
   };
 
+  // Add status update handler
+  const handleStatusUpdate = async (id, newStatus) => {
+    setIsUpdatingStatus(true);
+    setUpdatingId(id);
+
+    try {
+      const response = await axios.patch(`http://localhost:8000/prevention/${id}/status/`, {
+        status: newStatus
+      });
+      
+      // Update the local state with the new status
+      const updatedPreventions = preventions.map(prevention => 
+        prevention.id === id ? { ...prevention, status: newStatus } : prevention
+      );
+      
+      setPreventions(updatedPreventions);
+      setFilteredPreventions(updatedPreventions);
+      
+      // If the currently selected prevention is the one being updated, update it
+      if (selectedPrevention && selectedPrevention.id === id) {
+        setSelectedPrevention({ ...selectedPrevention, status: newStatus });
+      }
+      
+      // Show success message
+      alert(`Prevention strategy status updated to ${newStatus}`);
+    } catch (err) {
+      const errorMessage = err.response?.data?.Error || err.message || "Failed to update prevention status";
+      setError(errorMessage);
+      console.error("Error updating prevention status:", err);
+      alert('Failed to update prevention status');
+    } finally {
+      setIsUpdatingStatus(false);
+      setUpdatingId(null);
+    }
+  };
+
   const formatDate = (dateString) => {
     try {
       return new Date(dateString).toLocaleDateString();
@@ -120,6 +159,51 @@ const ManagePreventions = () => {
   const handleViewMore = (prevention) => {
     setSelectedPrevention(prevention);
     setIsModalOpen(true);
+  };
+
+  // Status badge component
+  const StatusBadge = ({ status }) => {
+    let bgColor = "bg-gray-100 text-gray-800";
+    
+    if (status === "waiting") {
+      bgColor = "bg-yellow-100 text-yellow-800";
+    } else if (status === "pending") {
+      bgColor = "bg-blue-100 text-blue-800";
+    } else if (status === "finished") {
+      bgColor = "bg-green-100 text-green-800";
+    }
+    
+    return (
+      <span className={`px-2 py-1 rounded-full text-xs font-medium ${bgColor}`}>
+        {status || "N/A"}
+      </span>
+    );
+  };
+
+  // Status dropdown component
+  const StatusDropdown = ({ id, currentStatus }) => {
+    return (
+      <div className="relative inline-block text-left">
+        <select
+          value={currentStatus || "waiting"}
+          onChange={(e) => handleStatusUpdate(id, e.target.value)}
+          disabled={isUpdatingStatus && updatingId === id}
+          className="block w-full px-4 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+        >
+          <option value="waiting">Waiting</option>
+          <option value="pending">Pending</option>
+          <option value="finished">Finished</option>
+        </select>
+        {isUpdatingStatus && updatingId === id && (
+          <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
+            <svg className="animate-spin h-5 w-5 text-sky-900" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+          </div>
+        )}
+      </div>
+    );
   };
 
   const PreventionDetailsModal = () => {
@@ -185,7 +269,16 @@ const ManagePreventions = () => {
           </DialogHeader>
           <div className="mt-8 space-y-6">
             <div className="bg-white p-6 rounded-lg space-y-4">
-              <h3 className="text-lg font-semibold text-gray-800">Strategy Overview</h3>
+              <div className="flex justify-between items-center">
+                <h3 className="text-lg font-semibold text-gray-800">Strategy Overview</h3>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm font-medium text-gray-700">Status:</span>
+                  <StatusDropdown 
+                    id={selectedPrevention.id} 
+                    currentStatus={selectedPrevention.status} 
+                  />
+                </div>
+              </div>
               <p className="text-gray-700"><strong>Action:</strong> {selectedPrevention.action}</p>
               <p className="text-gray-700"><strong>Description:</strong> {selectedPrevention.description}</p>
               <p className="text-gray-700">
@@ -238,14 +331,14 @@ const ManagePreventions = () => {
               </div>
             )}
   
-            {/* {selectedPrevention.budget && (
+            {selectedPrevention.budget && (
               <div className="bg-white p-6 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">Budget</h3>
                 <p className="text-gray-700 text-xl">
                   ${Number(selectedPrevention.budget).toLocaleString()}
                 </p>
               </div>
-            )} */}
+            )}
   
             <p className="text-gray-500 text-sm">
               Created on: {formatDate(selectedPrevention.created_at)}
@@ -255,10 +348,6 @@ const ManagePreventions = () => {
       </Dialog>
     );
   };
-
-
-
-
 
   const totalPages = Math.ceil(filteredPreventions.length / rowsPerPage);
   const paginatedData = filteredPreventions.slice(
@@ -303,7 +392,10 @@ const ManagePreventions = () => {
             {prevention.prediction && (
               <>
                 <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-3">Prediction Details</h3>
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-lg font-semibold text-gray-800">Prediction Details</h3>
+                    <StatusBadge status={prevention.status} />
+                  </div>
                   <div className="space-y-2">
                     <p className="text-gray-700"><strong>District:</strong> {prevention.prediction.district}</p>
                     <p className="text-gray-700"><strong>Sector:</strong> {prevention.prediction.sector}</p>
@@ -323,6 +415,17 @@ const ManagePreventions = () => {
                   </div>
                 </div>
                 <div className="mt-auto space-y-2">
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Update Status:</label>
+
+                    <span className="text-gray-700">
+                    <StatusDropdown 
+                      id={prevention.id} 
+                      currentStatus={prevention.status} 
+                    />
+                    </span>
+                    
+                  </div>
                   <button 
                     onClick={() => handleViewMore(prevention)}
                     className="w-full bg-sky-900 hover:bg-black text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
@@ -371,8 +474,6 @@ const ManagePreventions = () => {
       <div className="mt-32">
         <PreventionDetailsModal />
       </div>
-
-      
     </div>
   );
 };

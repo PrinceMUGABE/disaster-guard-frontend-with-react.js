@@ -8,6 +8,12 @@ const ResponsiveMenu = ({ showMenu, setShowMenu }) => {
   const handleLinkClick = () => {
     setShowMenu(false); // Close the menu when a link is clicked
   };
+  const handleLinkedInClick = (e) => {
+    e.preventDefault(); // Prevent React Router from trying to handle this
+    setShowMenu(false); // Close the menu
+    window.open('https://www.linkedin.com/in/mugabe-prince-2b377621b/', '_blank', 'noopener,noreferrer');
+  };
+
 
   return (
     <div
@@ -46,7 +52,14 @@ const ResponsiveMenu = ({ showMenu, setShowMenu }) => {
       </div>
       <div className="footer mt-8">
         <h1>
-          By <a href="www.linkedin.com/in/mugabe-prince-2b377621b">Eng. Herve</a>
+          By{" "}
+          <a 
+            href="https://www.linkedin.com/in/mugabe-prince-2b377621b/"
+            onClick={handleLinkedInClick}
+            className="hover:text-gray-300"
+          >
+            Eng. Herve
+          </a>
         </h1>
       </div>
     </div>

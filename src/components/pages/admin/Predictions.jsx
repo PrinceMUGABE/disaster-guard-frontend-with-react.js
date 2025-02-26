@@ -186,6 +186,8 @@ const AdminManageDisasterPredictions = () => {
   const handleCreatePrediction = async (e) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null); // Clear any previous errors
+
     try {
       const response = await fetch(
         "http://localhost:8000/prediction/predict/",
@@ -198,18 +200,30 @@ const AdminManageDisasterPredictions = () => {
           body: JSON.stringify(formData),
         }
       );
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Returned result after predicting: ', result);
-        setPredictionResult(result);
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Handle error response
+        const errorMessage = data.Error || data.error || "Failed to create prediction";
+        console.error("Error creating prediction:", errorMessage);
+
+        // If there's a next_available date in the response
+        if (data.next_available) {
+          const nextDate = new Date(data.next_available);
+          setError(`${errorMessage}. Next available: ${nextDate.toLocaleDateString()} at ${nextDate.toLocaleTimeString()}`);
+        } else {
+          setError(errorMessage);
+        }
+      } else {
+        console.log("Returned result after predicting: ", data);
+        setPredictionResult(data);
         await fetchPredictions();
         // Don't close the modal here
-      } else {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to create prediction");
       }
     } catch (error) {
-      alert(error.message);
+      console.error("Network error:", error);
+      setError(error.message || "Network error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }

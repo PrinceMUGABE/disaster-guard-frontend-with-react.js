@@ -268,6 +268,8 @@ function Users() {
                 <thead className="text-xs uppercase bg-sky-900 text-white">
                   <tr>
                     <th className="px-6 py-3">#</th>
+                    <th className="px-6 py-3">First Name</th>
+                    <th className="px-6 py-3">Last Name</th>
                     <th className="px-6 py-3">Phone</th>
                     <th className="px-6 py-3">Email</th>
                     <th className="px-6 py-3">Role</th>
@@ -284,6 +286,8 @@ function Users() {
                     currentUsers.map((user, index) => (
                       <tr key={user.id} className="bg-white border-b hover:bg-gray-50">
                         <td className="px-6 py-4 text-black">{index + 1}</td>
+                        <td className="px-6 py-4 text-black">{user.first_name}</td>
+                        <td className="px-6 py-4 text-black">{user.last_name}</td>
                         <td className="px-6 py-4 text-black">{user.phone_number}</td>
                         <td className="px-6 py-4 text-black">{user.email}</td>
                         <td className="px-6 py-4 text-black">{getRoleDisplayName(user.role)}</td>

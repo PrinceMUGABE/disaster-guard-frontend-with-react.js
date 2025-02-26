@@ -30,48 +30,28 @@ function UserLayout() {
     navigate("/");
   };
 
-  const userData = JSON.parse(localStorage.getItem('userData')) || {};
+  // Get user data from localStorage and ensure it's valid
+  const getUserData = () => {
+    try {
+      const data = localStorage.getItem('userData');
+      return data ? JSON.parse(data) : {};
+    } catch (error) {
+      console.error('Error parsing user data from localStorage:', error);
+      return {};
+    }
+  };
+
+  const userData = getUserData();
   const userId = userData.id || '';
-
-  // useEffect(() => {
-  //   const token = localStorage.getItem('token');
-  //   const fetchAllData = async () => {
-  //     try {
-  //       const headers = { Authorization: `Bearer ${token}` };
-  //       const predictionsRes = await Promise.all([
-  //         fetch('http://127.0.0.1:8000/irrigation/my-predictions/', { headers }).then(res => res.json()),
-  //       ]);
-
-  //       const today = new Date();
-  //       const todayPredictions = predictionsRes?.predictions?.filter(prediction => 
-  //         isSameDay(new Date(prediction.created_at), today)
-  //       ) || [];
-
-  //       setNotifications({ predictions: todayPredictions });
-  //       setNotificationCount(todayPredictions.length);
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //       if (error.status === 401) {
-  //         handleLogout();
-  //       }
-  //     }
-  //   };
-
-  //   fetchAllData();
-
-  //   const userData = JSON.parse(localStorage.getItem("userData"));
-  //   if (userData?.phone) {
-  //     setPhone(userData.phone);
-  //   }
-  // }, []);
 
   const isSameDay = (date1, date2) => {
     return date1.toDateString() === date2.toDateString();
   };
 
+  // Use React Router's navigate instead of window.location
   const handleLinkClick = (path) => {
     setIsMenuOpen(false);
-    window.location.href = path;
+    navigate(path);
   };
 
   return (
@@ -107,7 +87,7 @@ function UserLayout() {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex md:items-center md:space-x-4">
-            <button
+              <button
                 onClick={() => handleLinkClick('/user')}
                 className="px-4 py-2 text-white hover:bg-black rounded-md flex items-center space-x-2"
               >
@@ -122,13 +102,25 @@ function UserLayout() {
                 <BsEvStationFill className="text-xl" />
                 <span>My Predictions</span>
               </button>
-              <button
-                onClick={() => handleLinkClick(`/user/profile/${userId}`)}
-                className="px-4 py-2 text-white hover:bg-black rounded-md flex items-center space-x-2"
-              >
-                <FaUserCircle className="text-xl" />
-                <span>Profile</span>
-              </button>
+              
+              {userId ? (
+                <button
+                  onClick={() => handleLinkClick(`/user/profile/${userId}`)}
+                  className="px-4 py-2 text-white hover:bg-black rounded-md flex items-center space-x-2"
+                >
+                  <FaUserCircle className="text-xl" />
+                  <span>Profile</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate('/login')}
+                  className="px-4 py-2 text-white hover:bg-black rounded-md flex items-center space-x-2"
+                >
+                  <FaUserCircle className="text-xl" />
+                  <span>Login</span>
+                </button>
+              )}
+              
               <button
                 onClick={handleLogout}
                 className="px-4 py-2 text-white hover:bg-black rounded-md flex items-center space-x-2"
@@ -157,7 +149,7 @@ function UserLayout() {
           </button>
 
           <div className="flex flex-col pt-16 space-y-1">
-          <button
+            <button
               onClick={() => handleLinkClick('/user')}
               className="px-6 py-3 text-sm font-medium text-white hover:bg-black text-left flex items-center space-x-2"
             >
@@ -171,13 +163,25 @@ function UserLayout() {
               <BsEvStationFill className="text-lg" />
               <span>Predictions</span>
             </button>
-            <button
-              onClick={() => handleLinkClick(`/user/profile/${userId}`)}
-              className="px-6 py-3 text-sm font-medium text-white hover:bg-black text-left flex items-center space-x-2"
-            >
-              <FaUserCircle className="text-lg" />
-              <span>Profile</span>
-            </button>
+            
+            {userId ? (
+              <button
+                onClick={() => handleLinkClick(`/user/profile/${userId}`)}
+                className="px-6 py-3 text-sm font-medium text-white hover:bg-black text-left flex items-center space-x-2"
+              >
+                <FaUserCircle className="text-lg" />
+                <span>Profile</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => navigate('/login')}
+                className="px-6 py-3 text-sm font-medium text-white hover:bg-black text-left flex items-center space-x-2"
+              >
+                <FaUserCircle className="text-lg" />
+                <span>Login</span>
+              </button>
+            )}
+            
             <button
               onClick={handleLogout}
               className="px-6 py-3 text-sm font-medium text-white hover:bg-black text-left flex items-center space-x-2"

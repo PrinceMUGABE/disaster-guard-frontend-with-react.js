@@ -8,6 +8,8 @@ function AdminProfile() {
   const [userData, setUserData] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
     phone_number: '',
     email: '',
     role: ''
@@ -20,6 +22,8 @@ function AdminProfile() {
     if (storedUser && storedUser.id.toString() === id) {
       setUserData(storedUser);
       setFormData({
+        first_name: storedUser.first_name,
+        last_name: storedUser.last_name,
         phone_number: storedUser.phone,
         email: storedUser.email,
         role: storedUser.role
@@ -57,6 +61,8 @@ function AdminProfile() {
 
     const updatedUser = {
       ...userData,
+      first_name: formData.first_name,
+      last_name: formData.last_name,
       phone_number: formData.phone_number,
       email: formData.email,
       role: formData.role,
@@ -106,6 +112,16 @@ function AdminProfile() {
           <div className="space-y-6">
             <div className="grid grid-cols-1 gap-6">
               <div className="p-4 bg-gray-50 rounded-lg">
+                <strong className="text-gray-700 block mb-1">First Name</strong>
+                <span className="text-gray-800 text-lg">{userData.first_name}</span>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <strong className="text-gray-700 block mb-1">Last Name</strong>
+                <span className="text-gray-800 text-lg">{userData.last_name}</span>
+              </div>
+
+              <div className="p-4 bg-gray-50 rounded-lg">
                 <strong className="text-gray-700 block mb-1">Phone</strong>
                 <span className="text-gray-800 text-lg">{userData.phone}</span>
               </div>
@@ -140,6 +156,42 @@ function AdminProfile() {
         ) : (
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-4">
+              <div>
+                <label 
+                  className="block text-gray-700 text-sm font-medium mb-2" 
+                  htmlFor="first_name"
+                >
+                  First Name
+                </label>
+                <input
+                  type="text"
+                  id="first_name"
+                  name="first_name"
+                  value={formData.first_name}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                  required
+                />
+              </div>
+
+              <div>
+                <label 
+                  className="block text-gray-700 text-sm font-medium mb-2" 
+                  htmlFor="last_name"
+                >
+                  Last Name
+                </label>
+                <input
+                  type="text"
+                  id="last_name"
+                  name="last_name"
+                  value={formData.last_name}
+                  onChange={handleChange}
+                  className="w-full p-3 border border-gray-300 rounded-lg text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
+                  required
+                />
+              </div>
+
               <div>
                 <label 
                   className="block text-gray-700 text-sm font-medium mb-2" 
