@@ -194,11 +194,11 @@ const Red_Cross_ManagePreventions = () => {
           value={currentStatus || "waiting"}
           onChange={(e) => handleStatusUpdate(id, e.target.value)}
           disabled={isUpdatingStatus && updatingId === id}
-          className="block w-full px-4 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
+          className="block w-full px-4 py-2 text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"
         >
           <option value="waiting">Waiting</option>
           <option value="pending">Pending</option>
-          <option value="finished">Finished</option>
+          {/* <option value="finished">Finished</option> */}
         </select>
         {isUpdatingStatus && updatingId === id && (
           <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75">
