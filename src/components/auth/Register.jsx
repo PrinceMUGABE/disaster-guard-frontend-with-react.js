@@ -16,6 +16,7 @@ const Register = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    role: '', // Added role field
   });
   const [errors, setErrors] = useState({});
   const [message, setMessage] = useState('');
@@ -31,7 +32,7 @@ const Register = () => {
     }
 
     if (formData.email === '') {
-      newErrors.role = 'Enter valid email.';
+      newErrors.email = 'Enter valid email.';
     }
 
     if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(formData.password)) {
@@ -40,6 +41,10 @@ const Register = () => {
 
     if (formData.password !== formData.confirmPassword) {
       newErrors.confirmPassword = 'Passwords do not match.';
+    }
+
+    if (!formData.role) {
+      newErrors.role = 'Please select a role.';
     }
 
     return newErrors;
@@ -60,6 +65,7 @@ const Register = () => {
       phone: formData.phone,
       password: formData.password,
       email: formData.email,
+      role: formData.role, // Added role to submission
     };
 
     setLoading(true);
@@ -80,6 +86,9 @@ const Register = () => {
         }
         if (backendErrors.password) {
           errorMessages.password = backendErrors.password;
+        }
+        if (backendErrors.role) {
+          errorMessages.role = backendErrors.role;
         }
 
         setErrors((prev) => ({
@@ -153,6 +162,24 @@ const Register = () => {
               className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
               required
             />
+          </div>
+
+          {/* Added Role Dropdown */}
+          <div>
+            <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role</label>
+            <select
+              id="role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-md border border-gray-300 p-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900"
+              required
+            >
+              <option value="">Select Role</option>
+              <option value="user">User</option>
+              <option value="red_cross">Red Cross</option>
+            </select>
+            {errors.role && <p className="text-red-500 text-sm">{errors.role}</p>}
           </div>
 
           <div>

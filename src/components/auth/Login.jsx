@@ -101,6 +101,8 @@ const Login = () => {
             navigate("/admin");
           } else if (user.role.trim().toLowerCase() === "user") {
             navigate("/user");
+          }else if (user.role.trim().toLowerCase() === "red_cross"){
+            navigate("/red_cross");
           } else {
             console.log("Unknown user role. Please contact support.");
           }

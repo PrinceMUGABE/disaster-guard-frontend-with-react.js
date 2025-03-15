@@ -30,6 +30,10 @@ import AdminProfile from "./components/pages/admin/AdminProfile.jsx";
 import UserProfile from "./components/pages/user/UserProfile.jsx";
 import UserHome from "./components/pages/user/Home.jsx";
 import ManagePreventions from "./components/pages/admin/Preventions.jsx";
+import Red_Cross_Layout from "./components/red_cross/Layout.jsx";
+import Red_Cross_Home from "./components/pages/red_cross/Home.jsx";
+import RedCrossProfile from "./components/pages/red_cross/UserProfile.jsx";
+import Red_Cross_ManagePreventions from "./components/pages/red_cross/managePreventions.jsx";
 
 
 
@@ -82,6 +86,14 @@ const App = () => {
             <Route index element={<UserHome />} />
             <Route path="/user/predictions" element={<UserPredictions />} />
             <Route path="/user/profile/:id" element={<UserProfile />} />
+     
+          </Route>
+
+
+          <Route path="/red_cross" element={<Red_Cross_Layout />}>
+            <Route index element={<Red_Cross_Home />} />
+            <Route path="/red_cross/preventions" element={<Red_Cross_ManagePreventions />} />
+            <Route path="/red_cross/profile/:id" element={<RedCrossProfile />} />
      
           </Route>
 
